@@ -24,8 +24,8 @@ public class Converter {
         
         The corresponding JSON data would be similar to the following (tabs and
         other whitespace have been added for clarity).  Note the curly braces,
-        square brackets, and double-quotes!  These indicate which values should
-        be encoded as strings, and which values should be encoded as integers!
+        square brackets, and double-quotes!  These indicate which datas should
+        be encoded as strings, and which datas should be encoded as integers!
         
         {
             "colHeaders":["ID","Total","Assignment 1","Assignment 2","Exam 1"],
@@ -67,7 +67,40 @@ public class Converter {
             List<String[]> full = reader.readAll();
             Iterator<String[]> iterator = full.iterator();
             
-            // INSERT YOUR CODE HERE
+            JSONObject Object = new JSONObject(); 
+             
+            ArrayList<String> columns = new ArrayList<>();  
+            
+            ArrayList<String> rows = new ArrayList<>();
+            
+            ArrayList<ArrayList<Integer>> data = new ArrayList<>(); 
+
+            String[] colHeaders = full.get(0);
+            
+            for (String e: colHeaders) {
+                columns.add(e);
+                
+            }
+            for (int i = 1; i < full.size(); ++i) { 
+                String[] row = full.get(i); 
+                rows.add(row[0]); 
+                ArrayList<Integer> dataList = new ArrayList<>();
+                for (int j = 1; j < row.length; ++j) {                  
+                    dataList.add(Integer.parseInt(row[j]));
+                }
+                
+                
+                data.add(new ArrayList(dataList)); 
+            }
+
+            Object.put("columnHeaders", columns); 
+            Object.put("rowHeaders", rows); 
+            Object.put("data", data); 
+            
+
+            results = Object.toJSONString(); 
+            
+            
             
         }        
         catch(Exception e) { return e.toString(); }
@@ -82,10 +115,42 @@ public class Converter {
         
         try {
 
-            StringWriter writer = new StringWriter();
-            CSVWriter csvWriter = new CSVWriter(writer, ',', '"', '\n');
+            StringWriter stringWriter = new StringWriter();
+            CSVWriter csvWriter = new CSVWriter(stringWriter, ',', '"', '\n');
             
-            // INSERT YOUR CODE HERE
+            JSONParser parser = new JSONParser(); 
+            JSONObject Object = (JSONObject)parser.parse(jsonString); 
+            
+            JSONArray cHeaders = (JSONArray)Object.get("colHeaders");
+            JSONArray rHeaders = (JSONArray)Object.get("rowHeaders");
+            JSONArray data = (JSONArray)Object.get("data");                      
+
+            String[] cArray = new String[cHeaders.size()]; 
+            String[] rArray = new String[rHeaders.size()]; 
+            String[] dataArray = new String[data.size()]; 
+
+            for (int i = 0; i < cHeaders.size(); i++){ 
+                cArray[i] = cHeaders.get(i).toString(); 
+            }           
+            
+            csvWriter.writeNext(cArray);          
+
+            for (int i = 0; i < rHeaders.size(); i++){ 
+                rArray[i] = rHeaders.get(i).toString();                          
+                dataArray[i] = data.get(i).toString();
+            }
+            for (int i = 0; i < dataArray.length; i++) {                                     
+                JSONArray dataValues = (JSONArray)parser.parse(dataArray[i]); 
+                String[] row = new String[dataValues.size() + 1];
+                row[0] = rArray[i];
+                
+                for (int j = 0; j < dataValues.size(); j++) {
+                    row[j+1] = dataValues.get(j).toString();
+                }
+                csvWriter.writeNext(row);
+            }
+                results = stringWriter.toString(); 
+   
             
         }
         
